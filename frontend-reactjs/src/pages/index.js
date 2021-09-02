@@ -1,47 +1,134 @@
-import Box from "@material-ui/core/Box";
-import { Container, IconButton } from "@material-ui/core";
+import { useEffect, useState } from "react";
+import { Table, Button } from "reactstrap";
+import StudentForm from "../component/students/student-create-form";
 
-import { useStudents } from "../hooks/students";
-import { useEffect } from "react";
-import StudentsList from "../component/students/studentsList";
+import {getStudents, postStudent} from "../hooks/students";
 
 
 
 export default function Main() {
+  const [students, setStudents] = useState([]);
+  const [error, setError] = useState("");
+  const [open, setOpen] = useState(false);
+  const [inputValues, setInputValues] = useState({name:'', description: '', email:'', phone: ''});
+
+
+  async function fetchDataStudent() {
+    const result = getStudents();
+    result.then((res) => {
+      setStudents(res.data);
+    });
+  }
+
+  async function handleClickOpen () {
+    setOpen(true);
+  };
+
+  async function handleClose () {
+    setOpen(false);
+  };
+
+  const  onChangeAddStudentHandler= event => {
+    const { name, value } = event.target;
+    setInputValues(inputValues => ({
+        ...inputValues,
+        [name]: value
+    }));
+  };
  
-  const { getStudents, students, error } = useStudents();
+  async function addStudent() {
+    const data = {
+      name: inputValues.name,
+      description: inputValues.description,
+      email: inputValues.email,
+      phone: inputValues.phone,
+    };
+    const res = postStudent(data);
+    setOpen(false);
+    fetchDataStudent();
+  }
+
 
   useEffect(() => {
-    try {
-      getStudents();
-    } catch (error) {
-      console.log(error);
-    }
-  }, [getStudents]);
+    fetchDataStudent();
+  });
 
   return (
-    <Container display="flex" alignItems="center">
-      <Box display="flex" justifyContent="space-evenly">
-        <div>
-          <h1>Students Management</h1>
-         
-        </div>
-      
-      </Box>
-
-      <Box display="flex" flexDirection="column" alignItems="center">
-        {/* {error && <Error error={error} />} */}
-       
-        {students.length !== 0 ? (
-          <StudentsList students={students} />
+    <div className="App container mt-4">
+      <h2 className="font-weight-bold">Students Information</h2>
+      <StudentForm 
+          handleClickOpen={handleClickOpen}
+          newStudentData={inputValues}
+          onChangeAddStudentHandler={onChangeAddStudentHandler}
+          addStudent={addStudent}
+          handleClose={handleClose}
+          open={open}
+      />
+      <Table>
+        <thead>
+          <tr>
+            <th>#</th>
+            <th>Name</th>
+            <th>Description</th>
+            <th>Email</th>
+            <th>Phone</th>
+            <th>Actions</th>
+          </tr>
+        </thead>
+        {students.length === 0 ? (
+          <tbody>
+            <tr>
+              <td>
+                <h3>
+                  <p
+                    style={{
+                      fontSize: "1.4rem",
+                      fontWeight: 800,
+                      color: "cadetblue",
+                    }}
+                  >
+                    No students found
+                  </p>
+                </h3>
+              </td>
+            </tr>
+          </tbody>
         ) : (
-          <p
-            style={{ fontSize: "1.4rem", fontWeight: 800, color: "cadetblue" }}
-          >
-            No students found
-          </p>
+          <tbody>
+           {
+             students.map((student) => {
+               return (
+                <tr key={student.id}>
+                <td>{student._id}</td>
+                <td>{student.name}</td>
+                <td>{student.description}</td>
+                <td>{student.email}</td>    
+                <td>{student.phone}</td>
+                <td>
+                  <Button
+                    color="success"
+                    className="mr-3"
+                    size="sm"
+                  >
+                    Edit
+                  </Button>
+                  <Button
+                    color="danger"
+                    size="sm"
+                  >
+                    Delete
+                  </Button>
+                </td>
+              </tr>
+               );
+                 
+               
+                
+             })
+           }
+          </tbody>
         )}
-      </Box>
-    </Container>
+      </Table>
+    </div>
   );
 }

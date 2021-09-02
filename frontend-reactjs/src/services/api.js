@@ -1,7 +1,11 @@
 import axios from "axios";
 
-const api = axios.create({
-  baseURL: "http://localhost:3000",
-});
+const callApi= (url,method,data)=>{
+  return axios({
+    method:method,
+    url:url,
+    data:data,
+  });
+}
 
-export default api;
+export default callApi;
